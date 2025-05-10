@@ -9,7 +9,7 @@ consum_orar = st.slider('Consum mediu orar al fabricii (MWh)', 0.0, 5.0, 1.0)
 putere_pv = st.slider('Putere PV (MWp)', 0.0, 15.0, 2.0)
 capacitate_baterie = st.slider('Capacitate baterie (MWh)', 0.0, 100.0, 10.0)
 
-injectie_retea_option = st.selectbox('Opțiune injectare în rețea', ('Cu injectare', 'Fără injectare'))
+injectie_retea_option = st.selectbox('Opțiune injectare în rețea', ['Cu injectare', 'Fără injectare'])
 
 # Profil orar
 ore_an = 8760
@@ -55,21 +55,18 @@ pret_retea = 160
 valoare_autoconsum = autoconsum_total * pret_autoconsum
 valoare_injectare = injectie_retea * pret_injectare
 cost_energie_retea = consum_retea * pret_retea
-venit_total = valoare_autoconsum + valoare_injectare
 balanta_cost_anual = cost_energie_retea - valoare_injectare
+
+cost_anual_fara_pv = consum_anual * pret_retea
+saving_anual = cost_anual_fara_pv - (cost_energie_retea - valoare_injectare)
 
 investitie_pv = putere_pv * 1000 * cost_pv_kwp
 investitie_baterie = capacitate_baterie * 1000 * cost_baterie_kwh
 investitie_totala = investitie_pv + investitie_baterie
 
 OandM = investitie_totala * 0.015
-economie_neta = venit_total - OandM - cost_energie_retea
-
-if economie_neta > 0:
-    payback = investitie_totala / economie_neta
-    payback_str = f"{payback:.2f} ani"
-else:
-    payback_str = "N/A (Economie netă ≤ 0)"
+economie_neta = saving_anual - OandM
+payback = investitie_totala / economie_neta if economie_neta > 0 else float('inf')
 
 # Rezultate
 st.write("### Rezultate detaliate:")
@@ -81,15 +78,18 @@ st.write(f"- Valoare autoconsum: {valoare_autoconsum:.0f} €")
 st.write(f"- Valoare energie injectată: {valoare_injectare:.0f} €")
 st.write(f"- Cost energie din rețea: {cost_energie_retea:.0f} €")
 st.write(f"- Balanța cost anual: {balanta_cost_anual:.0f} €")
-st.write(f"- Venit total: {venit_total:.0f} €")
+st.write(f"- Economie anuală (saving): {saving_anual:.0f} €")
 st.write(f"- Investiție totală: {investitie_totala:.0f} €")
 st.write(f"- Costuri O&M anuale: {OandM:.0f} €")
 st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
-st.write(f"- Payback: {payback_str}")
+if payback != float('inf'):
+    st.write(f"- Payback: {payback:.2f} ani")
+else:
+    st.write("- Payback: Nerealizabil")
 
 # Grafic
-labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
-values = [autoconsum_total, injectie_retea, consum_retea, venit_total / 1000, economie_neta / 1000, payback if economie_neta > 0 else 0, balanta_cost_anual / 1000]
+labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Saving anual (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
+values = [autoconsum_total, injectie_retea, consum_retea, saving_anual / 1000, economie_neta / 1000, payback if payback != float('inf') else 0, balanta_cost_anual / 1000]
 
 colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'orange']
 
