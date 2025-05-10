@@ -53,6 +53,7 @@ valoare_autoconsum = autoconsum_total * pret_autoconsum
 valoare_injectare = injectie_retea * pret_injectare
 cost_energie_retea = consum_retea * pret_retea
 venit_total = valoare_autoconsum + valoare_injectare
+balanta_cost_anual = cost_energie_retea - valoare_injectare
 
 investitie_pv = putere_pv * 1000 * cost_pv_kwp
 investitie_baterie = capacitate_baterie * 1000 * cost_baterie_kwh
@@ -71,6 +72,7 @@ st.write(f"- Consum din rețea: {consum_retea:.0f} MWh")
 st.write(f"- Valoare autoconsum: {valoare_autoconsum:.0f} €")
 st.write(f"- Valoare energie injectată: {valoare_injectare:.0f} €")
 st.write(f"- Cost energie din rețea: {cost_energie_retea:.0f} €")
+st.write(f"- Balanța cost anual: {balanta_cost_anual:.0f} €")
 st.write(f"- Venit total: {venit_total:.0f} €")
 st.write(f"- Investiție totală: {investitie_totala:.0f} €")
 st.write(f"- Costuri O&M anuale: {OandM:.0f} €")
@@ -78,8 +80,8 @@ st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
 st.write(f"- Payback: {payback:.2f} ani")
 
 # Grafic
-labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)']
-values = [autoconsum_total, injectie_retea, consum_retea, venit_total / 1000, economie_neta / 1000, payback]
+labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
+values = [autoconsum_total, injectie_retea, consum_retea, venit_total / 1000, economie_neta / 1000, payback, balanta_cost_anual / 1000]
 
 fig, ax = plt.subplots()
 ax.bar(labels, values, color='skyblue')
