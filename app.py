@@ -1,5 +1,4 @@
 import streamlit as st
-import matplotlib.pyplot as plt
 
 st.title("Analiză Economică PV + Storage")
 
@@ -50,20 +49,8 @@ st.write(f"- Cost operare anual: {cost_OandM:.0f} €")
 st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
 st.write(f"- Payback: {payback:.2f} ani")
 
-# Reprezentare grafică
-labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)']
-values = [energie_autoconsumata, energie_injectata, venit_total / 1000, economie_neta / 1000, payback]
-
-fig, ax = plt.subplots()
-bars = ax.bar(labels, values, color=['green', 'blue', 'orange', 'purple', 'red'])
-ax.set_ylabel('Valoare')
-ax.set_title('Rezultate economice')
-ax.grid(True, axis='y', linestyle='--', alpha=0.7)
-
-# Adăugăm valori pe bare
-for bar in bars:
-    height = bar.get_height()
-    ax.annotate(f'{height:.1f}', xy=(bar.get_x() + bar.get_width() / 2, height),
-                xytext=(0, 3), textcoords="offset points", ha='center', va='bottom')
-
-st.pyplot(fig)
+# Grafic simplu Streamlit fără matplotlib
+st.write("### Reprezentare grafică:")
+st.bar_chart({
+    'Valori': [energie_autoconsumata, energie_injectata, venit_total / 1000, economie_neta / 1000, payback]
+}, use_container_width=True)
