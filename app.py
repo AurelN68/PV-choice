@@ -1,52 +1,69 @@
 import streamlit as st
+import matplotlib.pyplot as plt
 
 st.title("Analiză Economică PV + Storage")
 
 # Input utilizator
-consum = st.slider('Consum fabrică (MWh/an)', 0.1, 20.0, 1.4)
-consum = consum * 1000  # conversie la MWh/an
-putere_pv = st.slider('Putere PV (MWp)', 0.5, 5.0, 2.0)
-capacitate_baterie = st.slider('Capacitate baterie (kWh)', 0, 10000, 2000)
+consum = st.slider('Consum anual fabrică (MWh/an)', 0, 20000, 14000)
+putere_pv = st.slider('Capacitate parc PV (MWh/an)', 0, 50000, 24000)
+capacitate_baterie = st.slider('Capacitate stocare (MWh)', 0, 100, 20)
 
-# Calcule economice
-cost_pv_kwp = 800
-cost_baterie_kwh = 400
-pret_autoconsum = 160
-pret_injectare = 55
-ore_pv = 1200
+# Parametri economici standard
+cost_pv_kwp = 800  # €/kWp
+cost_baterie_kwh = 400  # €/kWh
+pret_autoconsum = 160  # €/MWh
+pret_injectare = 55  # €/MWh
+OandM_percent = 1.5  # % pe an
 
-energie_pv = putere_pv * ore_pv
-autoconsum = min(consum, energie_pv)
-injectie = max(energie_pv - consum, 0)
+# Calculul energiei disponibile din PV și consum
+energie_pv_produsa = putere_pv
+energie_autoconsumata = min(consum, energie_pv_produsa)
+energie_injectata = max(energie_pv_produsa - consum, 0)
 
-valoare_autoconsum = autoconsum * pret_autoconsum
-valoare_injectare = injectie * pret_injectare
+# Valori economice
+valoare_autoconsum = energie_autoconsumata * pret_autoconsum
+valoare_injectare = energie_injectata * pret_injectare
 venit_total = valoare_autoconsum + valoare_injectare
 
-investitie_pv = putere_pv * 1000 * cost_pv_kwp
-investitie_baterie = capacitate_baterie * cost_baterie_kwh
+# Costuri investiție
+investitie_pv = (putere_pv / 1200) * 1000 * cost_pv_kwp  # estimăm 1200 kWh/kWp/an
+investitie_baterie = capacitate_baterie * 1000 * cost_baterie_kwh
 investitie_totala = investitie_pv + investitie_baterie
 
-OandM = investitie_totala * 0.015
-economie_neta = venit_total - OandM
-payback = investitie_totala / economie_neta
+# Costuri operare
+cost_OandM = investitie_totala * OandM_percent / 100
 
-# Rezultate
+# Economie și Payback
+economie_neta = venit_total - cost_OandM
+payback = investitie_totala / economie_neta if economie_neta > 0 else float('inf')
+
+# Rezultate textuale
 st.write("### Rezultate detaliate:")
-st.write(f"- Autoconsum: {autoconsum:.0f} MWh")
-st.write(f"- Energie injectată: {injectie:.0f} MWh")
+st.write(f"- Energie produsă PV: {energie_pv_produsa:.0f} MWh")
+st.write(f"- Energie autoconsum: {energie_autoconsumata:.0f} MWh")
+st.write(f"- Energie injectată: {energie_injectata:.0f} MWh")
+st.write(f"- Valoare autoconsum: {valoare_autoconsum:.0f} €")
+st.write(f"- Valoare injecție în rețea: {valoare_injectare:.0f} €")
 st.write(f"- Venit total: {venit_total:.0f} €")
 st.write(f"- Investiție totală: {investitie_totala:.0f} €")
-st.write(f"- Costuri O&M anuale: {OandM:.0f} €")
+st.write(f"- Cost operare anual: {cost_OandM:.0f} €")
 st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
 st.write(f"- Payback: {payback:.2f} ani")
-import matplotlib.pyplot as plt
 
-labels = ['Autoconsum', 'Injectare', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)']
-values = [autoconsum, injectie, venit_total / 1000, economie_neta / 1000, payback]
+# Reprezentare grafică
+labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)']
+values = [energie_autoconsumata, energie_injectata, venit_total / 1000, economie_neta / 1000, payback]
 
 fig, ax = plt.subplots()
-bars = ax.bar(labels, values)
+bars = ax.bar(labels, values, color=['green', 'blue', 'orange', 'purple', 'red'])
 ax.set_ylabel('Valoare')
 ax.set_title('Rezultate economice')
+ax.grid(True, axis='y', linestyle='--', alpha=0.7)
+
+# Adăugăm valori pe bare
+for bar in bars:
+    height = bar.get_height()
+    ax.annotate(f'{height:.1f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                xytext=(0, 3), textcoords="offset points", ha='center', va='bottom')
+
 st.pyplot(fig)
