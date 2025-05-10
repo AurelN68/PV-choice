@@ -50,4 +50,3 @@ bars = ax.bar(labels, values)
 ax.set_ylabel('Valoare')
 ax.set_title('Rezultate economice')
 st.pyplot(fig)
-actualizare slider + grafice
