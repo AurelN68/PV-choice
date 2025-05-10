@@ -58,14 +58,15 @@ cost_energie_retea = consum_retea * pret_retea
 balanta_cost_anual = cost_energie_retea - valoare_injectare
 
 cost_anual_fara_pv = consum_anual * pret_retea
-saving_anual = cost_anual_fara_pv - (cost_energie_retea - valoare_injectare)
+cost_anual_cu_pv = cost_energie_retea - valoare_injectare
+economie_anuala_reala = cost_anual_fara_pv - cost_anual_cu_pv
 
 investitie_pv = putere_pv * 1000 * cost_pv_kwp
 investitie_baterie = capacitate_baterie * 1000 * cost_baterie_kwh
 investitie_totala = investitie_pv + investitie_baterie
 
 OandM = investitie_totala * 0.015
-economie_neta = saving_anual - OandM
+economie_neta = economie_anuala_reala - OandM
 payback = investitie_totala / economie_neta if economie_neta > 0 else float('inf')
 
 # Rezultate
@@ -78,7 +79,7 @@ st.write(f"- Valoare autoconsum: {valoare_autoconsum:.0f} €")
 st.write(f"- Valoare energie injectată: {valoare_injectare:.0f} €")
 st.write(f"- Cost energie din rețea: {cost_energie_retea:.0f} €")
 st.write(f"- Balanța cost anual: {balanta_cost_anual:.0f} €")
-st.write(f"- Economie anuală (saving): {saving_anual:.0f} €")
+st.write(f"- Economie anuală reală: {economie_anuala_reala:.0f} €")
 st.write(f"- Investiție totală: {investitie_totala:.0f} €")
 st.write(f"- Costuri O&M anuale: {OandM:.0f} €")
 st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
@@ -88,14 +89,14 @@ else:
     st.write("- Payback: Nerealizabil")
 
 # Grafic
-labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Saving anual (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
-values = [autoconsum_total, injectie_retea, consum_retea, saving_anual / 1000, economie_neta / 1000, payback if payback != float('inf') else 0, balanta_cost_anual / 1000]
+labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Economie anuală (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
+values = [autoconsum_total, injectie_retea, consum_retea, economie_anuala_reala / 1000, economie_neta / 1000, payback if payback != float('inf') else 0, balanta_cost_anual / 1000]
 
 colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'orange']
 
 fig, ax = plt.subplots()
 ax.bar(labels, values, color=colors)
 ax.set_ylabel('Valori')
-ax.set_title('Rezultate economice detaliate (cu profil orar și opțiune injectare)')
+ax.set_title('Rezultate economice detaliate (calcul payback corectat)')
 ax.grid(axis='y', linestyle='--', alpha=0.7)
 st.pyplot(fig)
