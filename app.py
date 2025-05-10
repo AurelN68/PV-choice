@@ -3,7 +3,8 @@ import streamlit as st
 st.title("Analiză Economică PV + Storage")
 
 # Input utilizator
-consum = st.slider('Consum fabrică (MWh/an)', 10000, 20000, 14000)
+consum = st.slider('Consum fabrică (MWh/an)', 0.1, 20.0, 1.4)
+consum = consum * 1000  # conversie la MWh/an
 putere_pv = st.slider('Putere PV (MWp)', 0.5, 5.0, 2.0)
 capacitate_baterie = st.slider('Capacitate baterie (kWh)', 0, 10000, 2000)
 
@@ -39,3 +40,14 @@ st.write(f"- Investiție totală: {investitie_totala:.0f} €")
 st.write(f"- Costuri O&M anuale: {OandM:.0f} €")
 st.write(f"- Economie netă anuală: {economie_neta:.0f} €")
 st.write(f"- Payback: {payback:.2f} ani")
+import matplotlib.pyplot as plt
+
+labels = ['Autoconsum', 'Injectare', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)']
+values = [autoconsum, injectie, venit_total / 1000, economie_neta / 1000, payback]
+
+fig, ax = plt.subplots()
+bars = ax.bar(labels, values)
+ax.set_ylabel('Valoare')
+ax.set_title('Rezultate economice')
+st.pyplot(fig)
+actualizare slider + grafice
