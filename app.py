@@ -2,53 +2,45 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 
-st.title("Analiză Economică PV + Storage cu profil orar")
+st.title("Analiză Economică PV + Storage cu profil orar detaliat")
 
 # Input utilizator
 consum_orar = st.slider('Consum mediu orar al fabricii (MWh)', 0.0, 5.0, 1.0)
 putere_pv = st.slider('Putere PV (MWp)', 0.0, 15.0, 2.0)
 capacitate_baterie = st.slider('Capacitate baterie (MWh)', 0.0, 100.0, 10.0)
 
-# Profil orar simplificat
+# Profil orar
 ore_an = 8760
-ore_zi = 24
 consum_anual = consum_orar * ore_an
-productie_orara_pv = np.zeros(ore_zi)
-productie_orara_pv[8:18] = putere_pv / (18-8)  # Producție PV între orele 8-18
 
-productie_anuala_pv = np.tile(productie_orara_pv, 365)
-consum_orar_vector = np.full(ore_an, consum_orar)
+# Profil orar producție PV (simplificat)
+ore_pv_zi = np.zeros(24)
+ore_pv_zi[8:18] = putere_pv
+productie_orara_anuala_pv = np.tile(ore_pv_zi, 365)
 
-# Simulare orară
-baterie = capacitate_baterie
+# Simulare orară cu baterie
 soc_baterie = 0
 injectie_retea = 0
 autoconsum_total = 0
 consum_retea = 0
 
 for ora in range(ore_an):
-    prod_pv = productie_anuala_pv[ora]
-    cons = consum_orar_vector[ora]
+    productie_pv = productie_orara_anuala_pv[ora]
+    consum = consum_orar
 
-    exces_prod = prod_pv - cons
+    surplus = productie_pv - consum
 
-    if exces_prod >= 0:
-        autoconsum_total += cons
-        if soc_baterie < baterie:
-            incarcare = min(exces_prod, baterie - soc_baterie)
-            soc_baterie += incarcare
-            injectie_retea += exces_prod - incarcare
-        else:
-            injectie_retea += exces_prod
+    if surplus >= 0:
+        autoconsum_total += consum
+        incarcare_posibila = min(surplus, capacitate_baterie - soc_baterie)
+        soc_baterie += incarcare_posibila
+        injectie_retea += surplus - incarcare_posibila
     else:
-        necesar = abs(exces_prod)
-        if soc_baterie >= necesar:
-            soc_baterie -= necesar
-            autoconsum_total += cons
-        else:
-            autoconsum_total += soc_baterie
-            consum_retea += necesar - soc_baterie
-            soc_baterie = 0
+        deficit = abs(surplus)
+        descarcare_posibila = min(deficit, soc_baterie)
+        soc_baterie -= descarcare_posibila
+        autoconsum_total += productie_pv + descarcare_posibila
+        consum_retea += deficit - descarcare_posibila
 
 # Parametri economici
 cost_pv_kwp = 800
@@ -92,6 +84,6 @@ values = [autoconsum_total, injectie_retea, consum_retea, venit_total / 1000, ec
 fig, ax = plt.subplots()
 ax.bar(labels, values, color='skyblue')
 ax.set_ylabel('Valori')
-ax.set_title('Rezultate economice detaliate (cu profil orar)')
+ax.set_title('Rezultate economice detaliate (cu profil orar corectat)')
 ax.grid(axis='y', linestyle='--', alpha=0.7)
 st.pyplot(fig)
