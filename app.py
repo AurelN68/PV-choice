@@ -9,6 +9,8 @@ consum_orar = st.slider('Consum mediu orar al fabricii (MWh)', 0.0, 5.0, 1.0)
 putere_pv = st.slider('Putere PV (MWp)', 0.0, 15.0, 2.0)
 capacitate_baterie = st.slider('Capacitate baterie (MWh)', 0.0, 100.0, 10.0)
 
+injectie_retea_option = st.selectbox('Injectare în rețea', ('Cu injectare', 'Fără injectare'))
+
 # Profil orar
 ore_an = 8760
 consum_anual = consum_orar * ore_an
@@ -34,7 +36,8 @@ for ora in range(ore_an):
         autoconsum_total += consum
         incarcare_posibila = min(surplus, capacitate_baterie - soc_baterie)
         soc_baterie += incarcare_posibila
-        injectie_retea += surplus - incarcare_posibila
+        if injectie_retea_option == 'Cu injectare':
+            injectie_retea += surplus - incarcare_posibila
     else:
         deficit = abs(surplus)
         descarcare_posibila = min(deficit, soc_baterie)
@@ -83,9 +86,11 @@ st.write(f"- Payback: {payback:.2f} ani")
 labels = ['Autoconsum (MWh)', 'Injectare (MWh)', 'Rețea (MWh)', 'Venit total (k€)', 'Economie netă (k€)', 'Payback (ani)', 'Balanță cost anual (k€)']
 values = [autoconsum_total, injectie_retea, consum_retea, venit_total / 1000, economie_neta / 1000, payback, balanta_cost_anual / 1000]
 
+colors = ['skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'skyblue', 'orange']
+
 fig, ax = plt.subplots()
-ax.bar(labels, values, color='skyblue')
+ax.bar(labels, values, color=colors)
 ax.set_ylabel('Valori')
-ax.set_title('Rezultate economice detaliate (cu profil orar corectat)')
+ax.set_title('Rezultate economice detaliate (cu profil orar și opțiune injectare)')
 ax.grid(axis='y', linestyle='--', alpha=0.7)
 st.pyplot(fig)
